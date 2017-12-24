@@ -3,7 +3,6 @@ package component.paintcanvas;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-import javafx.util.Pair;
 
 import java.util.LinkedList;
 import java.util.TreeSet;
@@ -22,14 +21,18 @@ public class PaintCanvas extends Canvas {
 	private Color bgColor;
 	private double weight;
 	
-	private LinkedList<Vector<Pair<PosPair, ColorProfile>>> history;
+	private LinkedList<Vector<HistoryData>> history;
+	private Vector<HistoryData> previousData;
+	private int state;
+	
 	private LinkedList<PosPair> paintPoint;
 	private TreeSet<PosPair> drawn;
-	private Vector<Pair<PosPair, ColorProfile>> hist;
 	
 	public PaintCanvas(int row, int column) {
 		super(column, row);
 		gc = getGraphicsContext2D();
+		
+		data = new Vector<Vector<ColorProfile>>();
 		
 		this.row = row;
 		this.column = column;
@@ -38,11 +41,12 @@ public class PaintCanvas extends Canvas {
 		fgColor = Color.BLACK;
 		bgColor = Color.WHITE;
 		
-		data = new Vector<Vector<ColorProfile>>();
+		history = new LinkedList<Vector<HistoryData>>();
+		previousData = new Vector<HistoryData>();
+		state = 0;
+		
 		paintPoint = new LinkedList<PosPair>();
-		history = new LinkedList<Vector<Pair<PosPair, ColorProfile>>>();
 		drawn = new TreeSet<PosPair>();
-		hist = new Vector<Pair<PosPair, ColorProfile>>();
 		
 		gc.setFill(bgColor);
 		
@@ -74,7 +78,7 @@ public class PaintCanvas extends Canvas {
 			double t = 0.0;
 			
 			if(paintPoint.size() == 4) {
-				paintPoint.removeFirst();
+				paintPoint.remove();
 				t = 0.5;
 			}
 			
@@ -86,19 +90,20 @@ public class PaintCanvas extends Canvas {
 			
 			double x1, x2, y1, y2;
 			int xx, yy;
+			
 			while(t <= 1) {
-				x1 = t * paintPoint.get(0).getFirst() + (1 - t) * xc;
-				y1 = t * paintPoint.get(0).getSecond() + (1 - t) * yc;
+				x1 = (1 - t) * paintPoint.get(0).getFirst() + t * xc;
+				y1 = (1 - t) * paintPoint.get(0).getSecond() + t * yc;
 				
-				x2 = t * xc + (1 - t) * paintPoint.get(2).getFirst();
-				y2 = t * yc + (1 - t) * paintPoint.get(2).getSecond();
+				x2 = (1 - t) * xc + t * paintPoint.get(2).getFirst();
+				y2 = (1 - t) * yc + t * paintPoint.get(2).getSecond();
 				
-				xx = (int) Math.round(t * x1 + (1 - t) * x2);
-				yy = (int) Math.round(t * y1 + (1 - t) * y2);
+				xx = (int) Math.round((1 - t) * x1 + t * x2);
+				yy = (int) Math.round((1 - t) * y1 + t * y2);
 				
 				paint(color, xx, yy);
 				
-				t += 0.0005;
+				t += 0.001;
 			}
 		}
 	}
@@ -108,9 +113,11 @@ public class PaintCanvas extends Canvas {
 			for(int j = Math.max(0, (int) Math.floor(x - weight)); j < Math.min(column - 1, (int) Math.ceil(x + weight)); ++j) {
 				if(Math.pow(y - i, 2) + Math.pow(x - j, 2) < Math.pow(weight, 2) && !drawn.contains(new PosPair(i, j))) {
 					drawn.add(new PosPair(i, j));
-					hist.add(new Pair<PosPair, ColorProfile>(new PosPair(i, j), new ColorProfile(data.get(i).get(j))));
 					
-					data.get(i).get(j).draw(new ColorProfile(color, 0.5));
+					previousData.add(new HistoryData(new PosPair(i, j), new ColorProfile(data.get(i).get(j)), 
+							data.get(i).get(j).draw(new ColorProfile(color, 0.5))));
+					
+					
 					gc.setFill(data.get(i).get(j).getColor());
 					gc.fillRect(j, i, 1, 1);
 				}
@@ -119,10 +126,26 @@ public class PaintCanvas extends Canvas {
 	}
 	
 	public void setPixel(int x, int y, ColorProfile cp) {
-		data.get(x).set(y, cp);
+		data.get(x).set(y, new ColorProfile(cp));
 		
-		gc.setFill(cp.getColor());
+		gc.setFill(data.get(x).get(y).getColor());
 		gc.fillRect(y, x, 1, 1);
+	}
+	
+	public void setState(int state) {
+		this.state = state;
+	}
+	
+	public Vector<Vector<ColorProfile>> getData() {
+		return data;
+	}
+	
+	public int getRow() {
+		return row;
+	}
+	
+	public int getColumn() {
+		return column;
 	}
 	
 	public Color getFgColor() {
@@ -133,12 +156,16 @@ public class PaintCanvas extends Canvas {
 		return bgColor;
 	}
 	
-	public Vector<Vector<ColorProfile>> getData() {
-		return data;
+	public LinkedList<Vector<HistoryData>> getHistory() {
+		return history;
 	}
 	
-	public LinkedList<Vector<Pair<PosPair, ColorProfile>>> getHistory() {
-		return history;
+	public Vector<HistoryData> getPreviousData() {
+		return previousData;
+	}
+	
+	public int getState() {
+		return state;
 	}
 	
 	public LinkedList<PosPair> getPaintPoint() {
@@ -147,9 +174,5 @@ public class PaintCanvas extends Canvas {
 	
 	public TreeSet<PosPair> getDrawn() {
 		return drawn;
-	}
-	
-	public Vector<Pair<PosPair, ColorProfile>> getHist() {
-		return hist;
 	}
 }

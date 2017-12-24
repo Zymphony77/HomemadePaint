@@ -26,13 +26,15 @@ public class ColorProfile {
 		this.maxOpacity = other.maxOpacity;
 	}
 	
-	public void draw(ColorProfile other) {
+	public ColorProfile draw(ColorProfile other) {
 		int red = toInteger((color.getRed() * maxOpacity + other.color.getRed() * other.maxOpacity) / (maxOpacity + other.maxOpacity));
 		int green = toInteger((color.getGreen() * maxOpacity + other.color.getGreen() * other.maxOpacity) / (maxOpacity + other.maxOpacity));
 		int blue = toInteger((color.getBlue() * maxOpacity + other.color.getBlue() * other.maxOpacity) / (maxOpacity + other.maxOpacity));
 		
 		color = Color.rgb(red, green, blue);
 		maxOpacity = Math.max(maxOpacity, other.maxOpacity);
+		
+		return new ColorProfile(Color.rgb(red, green, blue), maxOpacity);
 	}
 	
 	public Color getColor() {
