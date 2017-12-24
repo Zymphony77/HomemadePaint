@@ -20,6 +20,12 @@ public class ColorProfile {
 		this.currentOpacity = maxOpacity;
 	}
 	
+	public ColorProfile(ColorProfile other) {
+		this.color = other.color;
+		this.currentOpacity = other.currentOpacity;
+		this.maxOpacity = other.maxOpacity;
+	}
+	
 	public void draw(ColorProfile other) {
 		int red = toInteger((color.getRed() * maxOpacity + other.color.getRed() * other.maxOpacity) / (maxOpacity + other.maxOpacity));
 		int green = toInteger((color.getGreen() * maxOpacity + other.color.getGreen() * other.maxOpacity) / (maxOpacity + other.maxOpacity));

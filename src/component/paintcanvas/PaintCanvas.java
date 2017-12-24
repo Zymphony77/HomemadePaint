@@ -25,6 +25,7 @@ public class PaintCanvas extends Canvas {
 	private LinkedList<Vector<Pair<PosPair, ColorProfile>>> history;
 	private LinkedList<PosPair> paintPoint;
 	private TreeSet<PosPair> drawn;
+	private Vector<Pair<PosPair, ColorProfile>> hist;
 	
 	public PaintCanvas(int row, int column) {
 		super(column, row);
@@ -41,6 +42,7 @@ public class PaintCanvas extends Canvas {
 		paintPoint = new LinkedList<PosPair>();
 		history = new LinkedList<Vector<Pair<PosPair, ColorProfile>>>();
 		drawn = new TreeSet<PosPair>();
+		hist = new Vector<Pair<PosPair, ColorProfile>>();
 		
 		gc.setFill(bgColor);
 		
@@ -54,7 +56,9 @@ public class PaintCanvas extends Canvas {
 		
 		setOnMousePressed(event -> PaintCanvasHandler.mousePressed(this, event));
 		setOnMouseDragged(event -> PaintCanvasHandler.mouseDragged(this, event));
-		setOnMouseReleased(event -> PaintCanvasHandler.mouseReleased(this));
+		setOnMouseReleased(event -> PaintCanvasHandler.mouseReleased(this, event));
+		setOnKeyPressed(event -> PaintCanvasHandler.keyPressed(this, event));
+		setOnKeyReleased(event -> PaintCanvasHandler.keyReleased(this, event));
 	}
 	
 	/* 
@@ -99,11 +103,12 @@ public class PaintCanvas extends Canvas {
 		}
 	}
 	
-	private void paint(Color color, int x, int y) {
+	public void paint(Color color, int x, int y) {
 		for(int i = Math.max(0, (int) Math.floor(y - weight)); i < Math.min(row - 1, (int) Math.ceil(y + weight)); ++i) {
 			for(int j = Math.max(0, (int) Math.floor(x - weight)); j < Math.min(column - 1, (int) Math.ceil(x + weight)); ++j) {
 				if(Math.pow(y - i, 2) + Math.pow(x - j, 2) < Math.pow(weight, 2) && !drawn.contains(new PosPair(i, j))) {
 					drawn.add(new PosPair(i, j));
+					hist.add(new Pair<PosPair, ColorProfile>(new PosPair(i, j), new ColorProfile(data.get(i).get(j))));
 					
 					data.get(i).get(j).draw(new ColorProfile(color, 0.5));
 					gc.setFill(data.get(i).get(j).getColor());
@@ -111,6 +116,13 @@ public class PaintCanvas extends Canvas {
 				}
 			}
 		}
+	}
+	
+	public void setPixel(int x, int y, ColorProfile cp) {
+		data.get(x).set(y, cp);
+		
+		gc.setFill(cp.getColor());
+		gc.fillRect(y, x, 1, 1);
 	}
 	
 	public Color getFgColor() {
@@ -135,5 +147,9 @@ public class PaintCanvas extends Canvas {
 	
 	public TreeSet<PosPair> getDrawn() {
 		return drawn;
+	}
+	
+	public Vector<Pair<PosPair, ColorProfile>> getHist() {
+		return hist;
 	}
 }

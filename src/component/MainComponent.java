@@ -15,6 +15,8 @@ public class MainComponent {
 		
 		paintCanvas = new PaintCanvas(750, 750);
 		container.setCenter(paintCanvas);
+		
+		paintCanvas.requestFocus();
 	}
 	
 	public static MainComponent getInstance() {

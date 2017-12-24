@@ -14,6 +14,9 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		primaryStage.setScene(new Scene(MainComponent.getInstance().getContainer()));
+		
+		MainComponent.getInstance().getPaintCanvas().requestFocus();
+		
 		primaryStage.show();
 	}
 }
